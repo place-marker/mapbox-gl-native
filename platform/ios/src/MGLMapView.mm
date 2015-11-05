@@ -183,6 +183,8 @@ public:
     BOOL _delegateHasStrokeColorsForShapeAnnotations;
     BOOL _delegateHasFillColorsForShapeAnnotations;
     BOOL _delegateHasLineWidthsForShapeAnnotations;
+
+    NSString *_offlineMapPath;
 }
 
 #pragma mark - Setup & Teardown -
@@ -208,6 +210,17 @@ std::chrono::steady_clock::duration MGLDurationInSeconds(float duration)
 {
     if (self = [super initWithFrame:frame])
     {
+        [self commonInit];
+        self.styleURL = styleURL;
+    }
+    return self;
+}
+
+- (instancetype)initWithFrame:(CGRect)frame styleURL:(nullable NSURL *)styleURL offlineMapPath:(NSString *)offlineMapPath
+{
+    if (self = [super initWithFrame:frame])
+    {
+        _offlineMapPath = [offlineMapPath copy];
         [self commonInit];
         self.styleURL = styleURL;
     }
@@ -283,7 +296,11 @@ std::chrono::steady_clock::duration MGLDurationInSeconds(float duration)
     _mbglFileSource = new mbgl::DefaultFileSource([fileCachePath UTF8String], [[[[NSBundle mainBundle] resourceURL] path] UTF8String]);
 
     // setup mbgl map
-    _mbglMap = new mbgl::Map(*_mbglView, *_mbglFileSource, mbgl::MapMode::Continuous);
+    _mbglMap = new mbgl::Map(*_mbglView,
+                             *_mbglFileSource,
+                             mbgl::MapMode::Continuous,
+                             mbgl::GLContextMode::Unique,
+                             mbgl::ConstrainMode::HeightOnly);
 
     // start paused if in IB
     if (_isTargetingInterfaceBuilder || background) {

@@ -19,6 +19,7 @@ public:
     std::unique_ptr<FileRequest> request(const Resource&, Callback) override;
 
 private:
+    friend class DefaultFileRequest;
     class Impl;
     const std::unique_ptr<Impl> impl;
 };

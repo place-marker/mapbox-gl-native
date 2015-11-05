@@ -23,12 +23,30 @@ public:
     Impl(const std::string& cachePath, const std::string& assetRoot)
         : assetFileSource(assetRoot),
           cache(SharedSQLiteCache::get(cachePath)),
+          offlineFileSource(offlinePath),
           onlineFileSource(cache.get()) {
     }
 
     AssetFileSource assetFileSource;
     std::shared_ptr<SQLiteCache> cache;
+    OfflineFileSource offlineFileSource;
     OnlineFileSource onlineFileSource;
+};
+
+class DefaultFileRequest : public FileRequest {
+public:
+    DefaultFileRequest(const Resource& resource, FileSource::Callback callback, DefaultFileSource::Impl& impl) {
+        offlineRequest = impl.offlineFileSource.request(resource, [&impl, resource, callback, this] (Response response) {
+            if (response.error) {
+                onlineRequest = impl.onlineFileSource.request(resource, callback);
+            } else {
+                callback(response);
+            }
+        });
+    }
+    
+    std::unique_ptr<FileRequest> offlineRequest;
+    std::unique_ptr<FileRequest> onlineRequest;
 };
 
 DefaultFileSource::DefaultFileSource(const std::string& cachePath, const std::string& assetRoot)
