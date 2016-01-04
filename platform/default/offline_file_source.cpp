@@ -28,6 +28,23 @@ public:
 private:
     std::unique_ptr<WorkRequest> workRequest;
 };
+    
+class OfflineStyleFileRequest : public FileRequest {
+public:
+    OfflineStyleFileRequest(std::unique_ptr<WorkRequest> workRequest_)
+    : workRequest(std::move(workRequest_)) {
+    }
+    
+private:
+    std::unique_ptr<WorkRequest> workRequest;
+};
+    
+class OfflineStyleFileFakeRequest : public FileRequest {
+public:
+    OfflineStyleFileFakeRequest() {
+        
+    }
+};
 
 OfflineFileSource::OfflineFileSource(const std::string& path)
     : thread(std::make_unique<util::Thread<Impl>>(util::ThreadContext{ "OfflineFileSource", util::ThreadType::Unknown, util::ThreadPriority::Low }, path)) {
@@ -61,6 +78,66 @@ OfflineFileSource::Impl::~Impl() {
     }
 }
 
+void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callback callback) {
+    (void)url;
+    (void)callback;
+    try {
+        if (!db) {
+            Log::Error(Event::Database, path.c_str());
+            db = std::make_unique<Database>(path.c_str(), ReadOnly);
+        }
+        
+        //First try loading this style
+        Statement getStmt = db->prepare("SELECT `value` FROM `metadata` WHERE `name` = ?");
+        
+        const auto name = "gl_style_" + util::mapbox::canonicalURL(url);
+        getStmt.bind(1, name.c_str());
+        if (getStmt.run()) {
+            Response response;
+            response.data = std::make_shared<std::string>(getStmt.get<std::string>(0));
+            callback(response);
+        } else {
+            Response response;
+            response.error = std::make_unique<Response::Error>(Response::Error::Reason::NotFound);
+            callback(response);
+        }
+
+        
+    } catch(const std::exception& ex) {
+        Log::Error(Event::Database, ex.what());
+        std::string exAsString = std::string(ex.what());
+        if (exAsString.rfind("no such table") != std::string::npos) {
+            //Create the table in the database
+            std::unique_ptr<::mapbox::sqlite::Database> dbWritable;
+            dbWritable = std::make_unique<Database>(path.c_str(), ReadWrite | Create);
+
+            bool createStmtResult;
+            {
+                Statement createStmt = dbWritable->prepare("CREATE TABLE metadata (name TEXT, value TEXT);");
+                createStmtResult = createStmt.run(false);
+            }
+            dbWritable.reset();
+            if (createStmtResult) {
+                //Start over
+                Log::Error(Event::Database, "Created metadata table, starting over");
+                //We have to close and re-open the database because we changed the data
+                db.reset();
+                handleDownloadStyle(url, callback);
+                return;
+            } else {
+                Response response;
+                response.error = std::make_unique<Response::Error>(Response::Error::Reason::Other);
+                callback(response);
+            }
+        } else {
+            Log::Error(Event::Database, ex.what());
+            Response response;
+            response.error = std::make_unique<Response::Error>(Response::Error::Reason::NotFound);
+            callback(response);
+        }
+    }
+}
+    
 void OfflineFileSource::Impl::handleRequest(Resource resource, Callback callback) {
     try {
         if (!db) {
@@ -131,4 +208,12 @@ std::unique_ptr<FileRequest> OfflineFileSource::request(const Resource& resource
     return std::make_unique<OfflineFileRequest>(thread->invokeWithCallback(&Impl::handleRequest, callback, resource));
 }
 
+std::unique_ptr<FileRequest> OfflineFileSource::downloadStyle(const std::string &url, Callback callback) {
+    //@TODO: this needs to happen on the Impl thread when the libuv issues get worked out
+    thread->invokeSync<void>(&Impl::handleDownloadStyle, url, callback);
+    
+    return std::make_unique<OfflineStyleFileFakeRequest>();
+    //return std::make_unique<OfflineStyleFileRequest>(thread->invokeWithCallback(&Impl::handleDownloadStyle, callback, url));
+}
+    
 } // namespace mbgl
