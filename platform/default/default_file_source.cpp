@@ -6,6 +6,8 @@
 #include <mbgl/platform/platform.hpp>
 #include <mbgl/util/url.hpp>
 
+#include "offline_file_source.hpp"
+
 namespace {
 
 const std::string assetProtocol = "asset://";
