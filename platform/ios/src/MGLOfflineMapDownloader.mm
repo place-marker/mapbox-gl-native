@@ -53,11 +53,6 @@
         mbglFileSource->setAccessToken([[MGLAccountManager accessToken] cStringUsingEncoding:NSUTF8StringEncoding]);
         
         //First step - download the style URL
-        /*const size_t pos = styleURL.rfind('/');
-        std::string base = "";
-        if (pos != std::string::npos) {
-            base = styleURL.substr(0, pos + 1);
-        }*/
         std::string styleURLAsString = [[styleURL absoluteString] cStringUsingEncoding:NSUTF8StringEncoding];
         const size_t pos = styleURLAsString.rfind('/');
         std::string base = "";

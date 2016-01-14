@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>MGLMapboxAccessToken</key>
+	<string>pk.eyJ1IjoiYWRhbS1tYXBib3giLCJhIjoiMWE1M2QzNmI0YTk4OGRmMDlkYTRkY2UyOTM5Y2E1ZjQifQ.YYiIeO_J_JyPmRvh_zf-gw</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -40,9 +42,9 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2014–2016 Mapbox</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>The map will ALWAYS display the user's location.</string>
+	<string>The map will ALWAYS display the user&apos;s location.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>The map will display the user's location.</string>
+	<string>The map will display the user&apos;s location.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>Default</string>
 	<key>UIRequiredDeviceCapabilities</key>

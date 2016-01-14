@@ -15,6 +15,22 @@
 #include "sqlite3.hpp"
 #include <sqlite3.h>
 
+#include "compression.hpp"
+
+//Resource::Kind::Style
+
+#define TABLE_SCHEMA "CREATE TABLE resources ( \
+                        url TEXT NOT NULL PRIMARY KEY, \
+                        status INTEGER NOT NULL, \
+                        kind INTEGER NOT NULL, \
+                        expires INTEGER, \
+                        modified INTEGER, \
+                        accessed INTEGER, \
+                        etag TEXT, \
+                        data BLOB, \
+                        compressed INTEGER NOT NULL DEFAULT 0 \
+                        );"
+
 namespace mbgl {
 
 using namespace mapbox::sqlite;
@@ -92,14 +108,15 @@ void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callba
         }
         
         //First try loading this style
-        Statement getStmt = db->prepare("SELECT `value` FROM `metadata` WHERE `name` = ?");
+        Statement getStmt = db->prepare("SELECT `data` FROM `resources` WHERE `url` = ? AND `kind` = ?");
         
-        const auto name = "gl_style_" + util::mapbox::canonicalURL(url);
+        const auto name = util::mapbox::canonicalURL(url);
         getStmt.bind(1, name.c_str());
+        getStmt.bind(2, (int)Resource::Kind::Style);
         if (getStmt.run()) {
             Response response;
             //The data is going to be a string representation of JSON
-            response.data = std::make_shared<std::string>(getStmt.get<std::string>(0));
+            response.data = std::make_shared<std::string>(mbgl::util::decompress(getStmt.get<std::string>(0)));
             callback(response);
         } else {
             //Actually download the style
@@ -125,9 +142,12 @@ void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callba
                     
                     bool insertStmtResult;
                     {
-                        Statement insertStmt = dbWritable->prepare("INSERT INTO metadata (name, value) VALUES (?, ?)");
-                        insertStmt.bind(1, name.c_str());
-                        insertStmt.bind(2, res.data->c_str());
+                        Statement insertStmt = dbWritable->prepare("INSERT INTO resources (url, kind, status, data, compressed) VALUES (?, ?, ?, ?, ?)");
+                        insertStmt.bind(1, url.c_str());
+                        insertStmt.bind(2, (int)Resource::Kind::Style);
+                        insertStmt.bind(3, 0);  //Status OK
+                        insertStmt.bind(4, mbgl::util::compress(*res.data.get()));
+                        insertStmt.bind(5, 1);
                         insertStmtResult = insertStmt.run(false);
                     }
                     if (insertStmtResult) {
@@ -158,7 +178,7 @@ void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callba
 
             bool createStmtResult;
             {
-                Statement createStmt = dbWritable->prepare("CREATE TABLE metadata (name TEXT, value TEXT);");
+                Statement createStmt = dbWritable->prepare(TABLE_SCHEMA);
                 createStmtResult = createStmt.run(false);
             }
             dbWritable.reset();
