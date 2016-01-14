@@ -25,16 +25,36 @@ public:
     Impl(const std::string& cachePath, const std::string& assetRoot)
         : assetFileSource(assetRoot),
           cache(SharedSQLiteCache::get(cachePath)),
-          offlineFileSource(offlinePath),
-          onlineFileSource(cache.get()) {
+          onlineFileSource(cache.get()),
+          offlineFileSource(&onlineFileSource)
+    {
+    }
+    
+    Impl(const std::string& cachePath, const std::string& assetRoot, const std::string& offlineDatabasePath)
+    : assetFileSource(assetRoot),
+    cache(SharedSQLiteCache::get(cachePath)),
+    onlineFileSource(cache.get()),
+    offlineFileSource(&onlineFileSource, offlineDatabasePath)
+    {
     }
 
     AssetFileSource assetFileSource;
     std::shared_ptr<SQLiteCache> cache;
-    OfflineFileSource offlineFileSource;
     OnlineFileSource onlineFileSource;
+    OfflineFileSource offlineFileSource;
 };
 
+class StyleFileRequest : public FileRequest {
+public:
+    StyleFileRequest(const std::string& url, FileSource::Callback callback, DefaultFileSource::Impl& impl) {
+        offlineRequest = impl.offlineFileSource.downloadStyle(url, [&impl, url, callback, this] (Response response) {
+            callback(response);
+        });
+    }
+    
+    std::unique_ptr<FileRequest> offlineRequest;
+};
+    
 class DefaultFileRequest : public FileRequest {
 public:
     DefaultFileRequest(const Resource& resource, FileSource::Callback callback, DefaultFileSource::Impl& impl) {
@@ -55,6 +75,10 @@ DefaultFileSource::DefaultFileSource(const std::string& cachePath, const std::st
     : impl(std::make_unique<DefaultFileSource::Impl>(cachePath, assetRoot)) {
 }
 
+DefaultFileSource::DefaultFileSource(const std::string& cachePath, const std::string& assetRoot, const std::string& offlineDatabasePath)
+    : impl(std::make_unique<DefaultFileSource::Impl>(cachePath, assetRoot, offlineDatabasePath)) {
+}
+    
 DefaultFileSource::~DefaultFileSource() = default;
 
 void DefaultFileSource::setAccessToken(const std::string& accessToken) {
@@ -80,5 +104,9 @@ std::unique_ptr<FileRequest> DefaultFileSource::request(const Resource& resource
         return impl->onlineFileSource.request(resource, callback);
     }
 }
-
+    
+std::unique_ptr<FileRequest> DefaultFileSource::downloadStyle(const std::string &url, Callback callback) {
+    return std::make_unique<StyleFileRequest>(url, callback, *impl);
+}
+    
 } // namespace mbgl

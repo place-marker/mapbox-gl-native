@@ -64,11 +64,8 @@ static const CLLocationCoordinate2D WorldTourDestinations[] = {
 {
     [super viewDidLoad];
 
-    NSString *offlineMapPath = [[NSBundle mainBundle] pathForResource:@"cache" ofType:@"mbtiles"];
-
     self.mapView = [[MGLMapView alloc] initWithFrame:self.view.bounds
-                                            styleURL:[MGLStyle streetsStyleURL]
-                                      offlineMapPath:offlineMapPath];
+                                            styleURL:[MGLStyle streetsStyleURL]];
     self.mapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.mapView.delegate = self;
     [self.view addSubview:self.mapView];
@@ -166,7 +163,7 @@ static const CLLocationCoordinate2D WorldTourDestinations[] = {
                                                                 @"Add Custom Callout Point",
                                                                 @"Remove Annotations",
                                                                 @"Toggle Custom Style Layer",
-                            @"Test Offline Download",
+                                                                @"Test Offline Download",
                                                                 nil];
 
     [sheet showFromBarButtonItem:self.navigationItem.leftBarButtonItem animated:YES];
@@ -292,7 +289,7 @@ static const CLLocationCoordinate2D WorldTourDestinations[] = {
             [self insertCustomStyleLayer];
         }
     }
-    else if (buttonIndex == actionSheet.firstOtherButtonIndex + 11) {
+    else if (buttonIndex == actionSheet.firstOtherButtonIndex + 12) {
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
         NSString *libraryDirectory = [paths objectAtIndex:0];
         NSString *offlineMapPath =  [libraryDirectory stringByAppendingPathComponent:@"offline_cache.mbtiles"];

@@ -48,8 +48,9 @@
             NSString *libraryDirectory = [paths objectAtIndex:0];
             fileCachePath = [libraryDirectory stringByAppendingPathComponent:@"offline_cache.db"];
         }
-        std::shared_ptr<mbgl::SQLiteCache> mbglFileCache = mbgl::SharedSQLiteCache::get([fileCachePath UTF8String]);
-        mbgl::DefaultFileSource *mbglFileSource = new mbgl::DefaultFileSource(mbglFileCache.get(), "", dbPath ? dbPath.UTF8String : "");
+        mbgl::DefaultFileSource *mbglFileSource = new mbgl::DefaultFileSource([fileCachePath UTF8String],
+                                                                              "",
+                                                                              dbPath ? dbPath.UTF8String : "");
         mbglFileSource->setAccessToken([[MGLAccountManager accessToken] cStringUsingEncoding:NSUTF8StringEncoding]);
         
         //First step - download the style URL

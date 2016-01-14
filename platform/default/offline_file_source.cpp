@@ -1,4 +1,5 @@
 #include "offline_file_source.hpp"
+#include "online_file_source.hpp"
 #include <mbgl/storage/response.hpp>
 
 #include <mbgl/map/tile_id.hpp>
@@ -62,20 +63,27 @@ public:
     }
 };
 
-OfflineFileSource::OfflineFileSource(OnlineFileSource *inOnlineFileSource, const std::string& path)
-    : thread(std::make_unique<util::Thread<Impl>>(util::ThreadContext{ "OfflineFileSource", util::ThreadType::Unknown, util::ThreadPriority::Low }, path, inOnlineFileSource)),
+OfflineFileSource::OfflineFileSource(OnlineFileSource *inOnlineFileSource)
+    : thread(std::make_unique<util::Thread<Impl>>(util::ThreadContext{ "OfflineFileSource", util::ThreadType::Unknown, util::ThreadPriority::Low },  inOnlineFileSource)),
       onlineFileSource(inOnlineFileSource) {
 }
-
+    
+OfflineFileSource::OfflineFileSource(OnlineFileSource *inOnlineFileSource, const std::string &offlineDatabasePath)
+    : thread(std::make_unique<util::Thread<Impl>>(util::ThreadContext{ "OfflineFileSource", util::ThreadType::Unknown, util::ThreadPriority::Low },  inOnlineFileSource, offlineDatabasePath)),
+      onlineFileSource(inOnlineFileSource) {
+}
+    
 OfflineFileSource::~OfflineFileSource() = default;
 
 class OfflineFileSource::Impl {
 public:
-    explicit Impl(const std::string& path, OnlineFileSource *inOnlineFileSource);
+    explicit Impl(OnlineFileSource *inOnlineFileSource);
+    explicit Impl(OnlineFileSource *inOnlineFileSource, const std::string &offlineDatabasePath);
     ~Impl();
 
     void handleRequest(Resource, Callback);
-
+    void handleDownloadStyle(const std::string &url, Callback callback);
+    
 private:
     void respond(Statement&, Callback);
 
@@ -85,8 +93,13 @@ private:
     std::unique_ptr<FileRequest> styleRequest;
 };
 
-OfflineFileSource::Impl::Impl(const std::string& path_, OnlineFileSource *inOnlineFileSource)
-    : path(path_),
+OfflineFileSource::Impl::Impl( OnlineFileSource *inOnlineFileSource)
+    : path(),
+      onlineFileSource(inOnlineFileSource) {
+}
+    
+OfflineFileSource::Impl::Impl( OnlineFileSource *inOnlineFileSource, const std::string &offlineDatabasePath)
+    : path(offlineDatabasePath),
       onlineFileSource(inOnlineFileSource) {
 }
 

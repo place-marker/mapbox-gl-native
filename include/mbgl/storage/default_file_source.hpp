@@ -8,6 +8,7 @@ namespace mbgl {
 class DefaultFileSource : public FileSource {
 public:
     DefaultFileSource(const std::string& cachePath, const std::string& assetRoot);
+    DefaultFileSource(const std::string& cachePath, const std::string& assetRoot, const std::string& offlineDatabasePath);
     ~DefaultFileSource() override;
 
     void setAccessToken(const std::string&);
@@ -18,7 +19,10 @@ public:
 
     std::unique_ptr<FileRequest> request(const Resource&, Callback) override;
 
+    std::unique_ptr<FileRequest> downloadStyle(const std::string &url, Callback);
+    
 private:
+    friend class StyleFileRequest;
     friend class DefaultFileRequest;
     class Impl;
     const std::unique_ptr<Impl> impl;
