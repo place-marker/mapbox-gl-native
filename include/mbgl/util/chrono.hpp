@@ -10,6 +10,7 @@ using SystemClock = std::chrono::system_clock;
 
 using Seconds = std::chrono::seconds;
 using Milliseconds = std::chrono::milliseconds;
+using Microseconds = std::chrono::microseconds;
 
 using TimePoint = Clock::time_point;
 using Duration = Clock::duration;
@@ -43,6 +44,16 @@ Milliseconds asMilliseconds(_Duration duration) {
 template <class _Clock, class _Duration>
 Milliseconds toMilliseconds(std::chrono::time_point<_Clock, _Duration> time_point) {
     return asMilliseconds(toDuration<_Clock, _Duration>(time_point));
+}
+
+template <class _Duration>
+Microseconds asMicroseconds(_Duration duration) {
+    return std::chrono::duration_cast<Microseconds>(duration);
+}
+
+template <class _Clock, class _Duration>
+Microseconds toMicroseconds(std::chrono::time_point<_Clock, _Duration> time_point) {
+    return asMicroseconds(toDuration<_Clock, _Duration>(time_point));
 }
 
 } // namespace mbgl

@@ -60,11 +60,9 @@
 
 }
 
-using Clock = std::chrono::steady_clock;
-using TimePoint = Clock::time_point;
 template <typename Duration>
 inline int64_t Microseconds(Duration d) {
-    return std::chrono::duration_cast<std::chrono::microseconds>(d).count();
+    return mbgl::asMicroseconds(d).count();
 }
 
 size_t idx = 0;
