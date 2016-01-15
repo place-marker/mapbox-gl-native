@@ -4,6 +4,7 @@
 #include <mbgl/platform/log.hpp>
 #include <mbgl/util/image.hpp>
 #include <mbgl/util/io.hpp>
+#include <mbgl/util/chrono.hpp>
 
 #include <mapbox/pixelmatch.hpp>
 
@@ -100,7 +101,7 @@ uint64_t crc64(const std::string& str) {
     return crc64(str.data(), str.size());
 }
 
-PremultipliedImage render(Map& map, std::chrono::milliseconds timeout) {
+PremultipliedImage render(Map& map, Milliseconds timeout) {
     std::promise<PremultipliedImage> promise;
     map.renderStill([&](std::exception_ptr, PremultipliedImage&& image) {
         promise.set_value(std::move(image));

@@ -9,6 +9,7 @@
 #include <mbgl/util/tile_coordinate.hpp>
 #include <mbgl/platform/log.hpp>
 #include <mbgl/platform/platform.hpp>
+#include <mbgl/util/chrono.hpp>
 
 #include <cstdio>
 #include <cmath>
@@ -264,8 +265,7 @@ void Transform::flyTo(const CameraOptions &camera, const AnimationOptions &anima
         if (animation.velocity) {
             velocity = *animation.velocity / rho;
         }
-        duration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-            std::chrono::duration<double, std::chrono::seconds::period>(S / velocity));
+        duration = asSeconds(std::chrono::duration<double>(S / velocity));
     }
     if (duration == Duration::zero()) {
         // Perform an instantaneous transition.

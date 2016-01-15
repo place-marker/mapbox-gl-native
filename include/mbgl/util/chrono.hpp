@@ -12,7 +12,7 @@ using Seconds = std::chrono::seconds;
 using Milliseconds = std::chrono::milliseconds;
 
 using TimePoint = Clock::time_point;
-using Duration  = Clock::duration;
+using Duration = Clock::duration;
 
 using SystemTimePoint = SystemClock::time_point;
 using SystemDuration = SystemClock::duration;

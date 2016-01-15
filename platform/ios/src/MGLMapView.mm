@@ -24,6 +24,7 @@
 #include <mbgl/util/image.hpp>
 #include <mbgl/util/std.hpp>
 #include <mbgl/util/default_styles.hpp>
+#include <mbgl/util/chrono.hpp>
 
 #import "Mapbox.h"
 #import "../../darwin/MGLGeometry_Private.h"
@@ -189,9 +190,9 @@ public:
 
 @dynamic debugActive;
 
-std::chrono::steady_clock::duration MGLDurationInSeconds(float duration)
+mbgl::Duration MGLDurationInSeconds(float duration)
 {
-    return std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<float, std::chrono::seconds::period>(duration));
+    return mbgl::asSeconds(std::chrono::duration<float>(duration));
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
