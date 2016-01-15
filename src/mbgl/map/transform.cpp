@@ -265,7 +265,7 @@ void Transform::flyTo(const CameraOptions &camera, const AnimationOptions &anima
         if (animation.velocity) {
             velocity = *animation.velocity / rho;
         }
-        duration = asSeconds(std::chrono::duration<double>(S / velocity));
+        duration = asSeconds(CustomDuration<double>(S / velocity));
     }
     if (duration == Duration::zero()) {
         // Perform an instantaneous transition.
@@ -518,7 +518,7 @@ void Transform::startTransition(const CameraOptions& camera,
     transitionDuration = duration;
 
     transitionFrameFn = [isAnimated, animation, frame, anchor, anchorLatLng, this](const TimePoint now) {
-        float t = isAnimated ? (std::chrono::duration<float>(now - transitionStart) / transitionDuration) : 1.0;
+        float t = isAnimated ? (CustomDuration<float>(now - transitionStart) / transitionDuration) : 1.0;
         Update result;
         if (t >= 1.0) {
             result = frame(1.0);

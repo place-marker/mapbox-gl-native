@@ -192,7 +192,7 @@ public:
 
 mbgl::Duration MGLDurationInSeconds(float duration)
 {
-    return mbgl::asSeconds(std::chrono::duration<float>(duration));
+    return mbgl::asSeconds(CustomDuration<float>(duration));
 }
 
 - (instancetype)initWithFrame:(CGRect)frame

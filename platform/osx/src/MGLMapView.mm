@@ -98,7 +98,7 @@ NSImage *MGLDefaultMarkerImage() {
 
 /// Converts from a duration in seconds to a duration object usable in mbgl.
 mbgl::Duration MGLDurationInSeconds(NSTimeInterval duration) {
-    return mbgl::asSeconds(std::chrono::duration<NSTimeInterval>(duration));
+    return mbgl::asSeconds(mbgl::CustomDuration<NSTimeInterval>(duration));
 }
 
 /// Converts a media timing function into a unit bezier object usable in mbgl.

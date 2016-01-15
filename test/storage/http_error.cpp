@@ -21,7 +21,7 @@ TEST_F(Storage, HTTPTemporaryError) {
         static int counter = 0;
         switch (counter++) {
         case 0: {
-            const auto duration = std::chrono::duration<const double>(Clock::now() - start).count();
+            const auto duration = CustomDuration<const double>(Clock::now() - start).count();
             EXPECT_GT(0.2, duration) << "Initial error request took too long";
             ASSERT_NE(nullptr, res.error);
             EXPECT_EQ(Response::Error::Reason::Server, res.error->reason);
@@ -35,7 +35,7 @@ TEST_F(Storage, HTTPTemporaryError) {
         } break;
         case 1: {
             req1.reset();
-            const auto duration = std::chrono::duration<const double>(Clock::now() - start).count();
+            const auto duration = CustomDuration<const double>(Clock::now() - start).count();
             EXPECT_LT(0.99, duration) << "Backoff timer didn't wait 1 second";
             EXPECT_GT(1.2, duration) << "Backoff timer fired too late";
             EXPECT_EQ(nullptr, res.error);
@@ -67,7 +67,7 @@ TEST_F(Storage, HTTPConnectionError) {
     std::unique_ptr<FileRequest> req2 = fs.request({ Resource::Unknown, "http://127.0.0.1:3001/" }, [&](Response res) {
         static int counter = 0;
         static int wait = 0;
-        const auto duration = std::chrono::duration<const double>(Clock::now() - start).count();
+        const auto duration = CustomDuration<const double>(Clock::now() - start).count();
         EXPECT_LT(wait - 0.01, duration) << "Backoff timer didn't wait 1 second";
         EXPECT_GT(wait + 0.2, duration) << "Backoff timer fired too late";
         ASSERT_NE(nullptr, res.error);

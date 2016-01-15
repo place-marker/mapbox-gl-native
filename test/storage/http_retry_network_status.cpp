@@ -65,7 +65,7 @@ TEST_F(Storage, HTTPNetworkStatusChangePreempt) {
     const Resource resource{ Resource::Unknown, "http://127.0.0.1:3001/test" };
     std::unique_ptr<FileRequest> req = fs.request(resource, [&](Response res) {
         static int counter = 0;
-        const auto duration = std::chrono::duration<const double>(Clock::now() - start).count();
+        const auto duration = CustomDuration<const double>(Clock::now() - start).count();
         if (counter == 0) {
             EXPECT_GT(0.2, duration) << "Response came in too late";
         } else if (counter == 1) {

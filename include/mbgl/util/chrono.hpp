@@ -17,6 +17,9 @@ using Duration = Clock::duration;
 using SystemTimePoint = SystemClock::time_point;
 using SystemDuration = SystemClock::duration;
 
+template <typename _Rep>
+using CustomDuration = std::chrono::duration<_Rep>;
+
 template <class _Clock, class _Duration>
 _Duration toDuration(std::chrono::time_point<_Clock, _Duration> time_point) {
     return time_point.time_since_epoch();

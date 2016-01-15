@@ -123,7 +123,7 @@ public:
                 return final;
             } else {
                 // Interpolate between recursively-calculated prior value and final.
-                float t = std::chrono::duration<float>(parameters.now - begin) / (end - begin);
+                float t = CustomDuration<float>(parameters.now - begin) / (end - begin);
                 return util::interpolate(prior->calculate(parameters), final, t);
             }
         }

@@ -67,12 +67,12 @@ FadeProperties FrameHistory::getFadeProperties(const TimePoint now, const Durati
     // Calculate the speed of zooming, and how far it would zoom in terms of zoom levels in one
     // duration
     float zoomDiff = endingZ - history[1].z;
-    std::chrono::duration<float> timeDiff = lastFrame.now - history[1].now;
+    CustomDuration<float> timeDiff = lastFrame.now - history[1].now;
     float fadedist = zoomDiff / (timeDiff / duration);
 
     // At end of a zoom when the zoom stops changing continue pretending to zoom at that speed
     // bump is how much farther it would have been if it had continued zooming at the same rate
-    float bump = std::chrono::duration<float>(now - lastFrame.now) / duration * fadedist;
+    float bump = CustomDuration<float>(now - lastFrame.now) / duration * fadedist;
 
     return FadeProperties {
         fadedist,

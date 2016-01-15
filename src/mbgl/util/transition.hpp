@@ -22,7 +22,7 @@ public:
         if (duration == Duration::zero()) return 1;
         if (start > now) return 0;
 
-        return std::chrono::duration<float>(now - start) / duration;
+        return CustomDuration<float>(now - start) / duration;
     }
 
     virtual state update(const TimePoint& now) const = 0;
