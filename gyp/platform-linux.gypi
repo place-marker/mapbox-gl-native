@@ -17,7 +17,6 @@
         '../platform/default/application_root.cpp',
         '../platform/default/thread.cpp',
         '../platform/default/image.cpp',
-        '../platform/default/webp_reader.cpp',
         '../platform/default/png_reader.cpp',
         '../platform/default/jpeg_reader.cpp',
         '../platform/default/timer.cpp',
