@@ -1,4 +1,6 @@
 #include <mbgl/platform/log.hpp>
+#include <mbgl/util/io.hpp>
+#include <mbgl/util/string.hpp>
 
 #include "sqlite3.hpp"
 #include <sqlite3.h>
@@ -193,5 +195,68 @@ void Statement::reset() {
     sqlite3_reset(stmt);
 }
 
+
+bool Database::ensureSchemaVersion(const int schemaVersion, const std::string &tableName) {
+    try {
+        Statement userVersionStmt(prepare("PRAGMA user_version"));
+        if (userVersionStmt.run() && userVersionStmt.get<int>(0) == schemaVersion) {
+            return true;
+        }
+    } catch (mapbox::sqlite::Exception& ex) {
+        if (ex.code == SQLITE_NOTADB) {
+            return false;
+        }
+        
+        mbgl::Log::Error(mbgl::Event::Database, ex.code, ex.what());
+    }
+    
+    // Version mismatch, drop the table so it will
+    // get recreated.
+    try {
+        exec("DROP TABLE IF EXISTS `" + tableName + "`");
+    } catch (mapbox::sqlite::Exception& ex) {
+        mbgl::Log::Error(mbgl::Event::Database, ex.code, ex.what());
+    }
+    return false;
+}
+  
+bool database_createSchema(std::shared_ptr<Database> db,
+                           const std::string &path,
+                           const char *const sql,
+                           const int schemaVersion,
+                           const std::string &tableName) {
+    if (db->ensureSchemaVersion(schemaVersion, tableName)) {
+        return true;
+    }
+    
+    try {
+        db->exec(sql);
+        db->exec("PRAGMA user_version = " + mbgl::util::toString(schemaVersion));
+        return true;
+    } catch (mapbox::sqlite::Exception &ex) {
+        if (ex.code == SQLITE_NOTADB) {
+            mbgl::Log::Warning(mbgl::Event::Database, "Trashing invalid database");
+            db.reset();
+            try {
+                mbgl::util::deleteFile(path);
+            } catch (mbgl::util::IOException& ioEx) {
+                mbgl::Log::Error(mbgl::Event::Database, ex.code, ex.what());
+            }
+            db = std::make_unique<Database>(path.c_str(), ReadWrite | Create);
+        } else {
+            mbgl::Log::Error(mbgl::Event::Database, ex.code, ex.what());
+        }
+        
+        // Creating the database table + index failed. That means there may already be one, likely
+        // with different columns. Drop it and try to create a new one.
+        db->exec("DROP TABLE IF EXISTS `http_cache`");
+        db->exec(sql);
+        db->exec("PRAGMA user_version = " + mbgl::util::toString(schemaVersion));
+        return false;
+    }
+    return false;
+}
+
+    
 } // namespace sqlite
 } // namespace mapbox

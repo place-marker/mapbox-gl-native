@@ -20,6 +20,8 @@
 
 //Resource::Kind::Style
 
+//Increment this when the schema changes; warning it will delete all data
+#define SCHEMA_VERSION 1
 #define TABLE_SCHEMA "CREATE TABLE resources ( \
                         url TEXT NOT NULL PRIMARY KEY, \
                         status INTEGER NOT NULL, \
@@ -88,7 +90,7 @@ private:
     void respond(Statement&, Callback);
 
     const std::string path;
-    std::unique_ptr<::mapbox::sqlite::Database> db;
+    std::shared_ptr<::mapbox::sqlite::Database> db;
     OnlineFileSource *onlineFileSource;
     std::unique_ptr<FileRequest> styleRequest;
 };
@@ -117,8 +119,9 @@ void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callba
     try {
         if (!db) {
             Log::Error(Event::Database, path.c_str());
-            db = std::make_unique<Database>(path.c_str(), ReadOnly);
+            db = std::make_shared<Database>(path.c_str(), ReadWrite | Create);
         }
+        database_createSchema(db, path, TABLE_SCHEMA, SCHEMA_VERSION, "resources");
         
         //First try loading this style
         Statement getStmt = db->prepare("SELECT `data` FROM `resources` WHERE `url` = ? AND `kind` = ?");
@@ -183,36 +186,10 @@ void OfflineFileSource::Impl::handleDownloadStyle(const std::string &url, Callba
     } catch(const std::exception& ex) {
         Log::Error(Event::Database, ex.what());
         std::string exAsString = std::string(ex.what());
-        if ((exAsString.rfind("no such table") != std::string::npos) ||
-            (exAsString.rfind("unable to open database") != std::string::npos)) {
-            //Create the table in the database
-            std::unique_ptr<::mapbox::sqlite::Database> dbWritable;
-            dbWritable = std::make_unique<Database>(path.c_str(), ReadWrite | Create);
-
-            bool createStmtResult;
-            {
-                Statement createStmt = dbWritable->prepare(TABLE_SCHEMA);
-                createStmtResult = createStmt.run(false);
-            }
-            dbWritable.reset();
-            if (createStmtResult) {
-                //Start over
-                Log::Error(Event::Database, "Created metadata table, starting over");
-                //We have to close and re-open the database because we changed the data
-                db.reset();
-                handleDownloadStyle(url, callback);
-                return;
-            } else {
-                Response response;
-                response.error = std::make_unique<Response::Error>(Response::Error::Reason::Other);
-                callback(response);
-            }
-        } else {
-            Log::Error(Event::Database, ex.what());
-            Response response;
-            response.error = std::make_unique<Response::Error>(Response::Error::Reason::NotFound);
-            callback(response);
-        }
+        Log::Error(Event::Database, ex.what());
+        Response response;
+        response.error = std::make_unique<Response::Error>(Response::Error::Reason::Other);
+        callback(response);
     }
 }
     

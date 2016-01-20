@@ -42,11 +42,19 @@ public:
 
     void exec(const std::string &sql);
     Statement prepare(const char *query);
-
+    bool ensureSchemaVersion(const int schemaVersion, const std::string &tableName);
+    
 private:
     sqlite3 *db = nullptr;
 };
-
+    
+bool database_createSchema(std::shared_ptr<Database> db,
+                           const std::string &path,
+                           const char *const sql,
+                           const int schemaVersion,
+                           const std::string &tableName);
+    
+    
 class Statement {
 private:
     Statement(const Statement &) = delete;
