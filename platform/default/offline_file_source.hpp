@@ -3,6 +3,7 @@
 
 #include <mbgl/storage/file_source.hpp>
 #include <mbgl/util/work_request.hpp>
+#include <mbgl/util/geo.hpp>
 
 #include "online_file_source.hpp"
 
@@ -19,8 +20,13 @@ public:
     ~OfflineFileSource() override;
 
     std::unique_ptr<FileRequest> request(const Resource&, Callback) override;
-    std::unique_ptr<FileRequest> downloadStyle(const std::string &url, Callback callback);
-
+    
+    std::unique_ptr<FileRequest> beginDownloading(const std::string &styleURL,
+                                                  const LatLngBounds &coordinateBounds,
+                                                  const float minimumZ,
+                                                  const float maximumZ,
+                                                  Callback callback);
+    
 public:
     friend class FrontlineFileRequest;
 
@@ -28,6 +34,8 @@ public:
     const std::unique_ptr<util::Thread<Impl>> thread;
 private:
     OnlineFileSource *onlineFileSource;
+    
+    std::unique_ptr<FileRequest> downloadStyle(const std::string &url, Callback callback);
 };
 
 } // namespace mbgl

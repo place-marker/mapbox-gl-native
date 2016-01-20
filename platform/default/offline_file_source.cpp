@@ -294,4 +294,16 @@ std::unique_ptr<FileRequest> OfflineFileSource::downloadStyle(const std::string 
     //return std::make_unique<OfflineStyleFileRequest>(thread->invokeWithCallback(&Impl::handleDownloadStyle, callback, url));
 }
     
+    
+    
+std::unique_ptr<FileRequest> OfflineFileSource::beginDownloading(const std::string &styleURL,
+                                                                 const LatLngBounds &coordinateBounds,
+                                                                 const float minimumZ,
+                                                                 const float maximumZ,
+                                                                 Callback callback) {
+    (void)coordinateBounds;
+    (void)minimumZ;
+    (void)maximumZ;
+    return downloadStyle(styleURL, callback);
+}
 } // namespace mbgl

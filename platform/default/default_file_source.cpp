@@ -47,7 +47,8 @@ public:
 class StyleFileRequest : public FileRequest {
 public:
     StyleFileRequest(const std::string& url, FileSource::Callback callback, DefaultFileSource::Impl& impl) {
-        offlineRequest = impl.offlineFileSource.downloadStyle(url, [&impl, url, callback, this] (Response response) {
+        const mbgl::LatLngBounds dummy;
+        offlineRequest = impl.offlineFileSource.beginDownloading(url, dummy, 0.0f, 0.0f, [&impl, url, callback, this] (Response response) {
             callback(response);
         });
     }
