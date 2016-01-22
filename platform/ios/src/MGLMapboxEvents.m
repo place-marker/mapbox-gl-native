@@ -409,6 +409,10 @@ const NSTimeInterval MGLFlushInterval = 60;
     _locationManager.desiredAccuracy = kCLLocationAccuracyKilometer;
     _locationManager.distanceFilter = 10;
     _locationManager.delegate = self;
+    // -[CLLocationManager allowsBackgroundLocationUpdates] is only available in iOS 9+.
+    if ([_locationManager respondsToSelector:@selector(allowsBackgroundLocationUpdates)]) {
+        _locationManager.allowsBackgroundLocationUpdates = YES;
+    }
 
     [_locationManager startUpdatingLocation];
 
